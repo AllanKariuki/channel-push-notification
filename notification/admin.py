@@ -25,14 +25,14 @@ class NotificationAdmin(admin.ModelAdmin):
 
                 notification=Notification.objects.create(message=message)
 
-                # channel_layer = get_channel_layer()
-                # async_to_sync(channel_layer.group_send) (
-                #     "notifications",
-                #     {
-                #         "type": "send_notification",
-                #         "message": message
-                #     }
-                # )
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send) (
+                    "notifications",
+                    {
+                        "type": "send_notification",
+                        "message": message
+                    }
+                )
                 return HttpResponseRedirect("../{}/".format(notification.pk))
         else:
             form = SendNotificationForm()
