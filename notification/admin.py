@@ -1,5 +1,11 @@
 from django.contrib import admin
 from django import forms
+from django.http import HttpResponseRedirect
+from django.urls import path
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 from .models import Notification
 
 
@@ -16,10 +22,27 @@ class NotificationAdmin(admin.ModelAdmin):
             form = SendNotificationForm(request.POST)
             if form.is_valid():
                 message = form.cleaned_data["message"]
+
                 notification=Notification.objects.create(message=message)
-                # notification.save()
+
+                # channel_layer = get_channel_layer()
+                # async_to_sync(channel_layer.group_send) (
+                #     "notifications",
+                #     {
+                #         "type": "send_notification",
+                #         "message": message
+                #     }
+                # )
+                return HttpResponseRedirect("../{}/".format(notification.pk))
         else:
             form = SendNotificationForm()
         context = self.get_changeform_initial_data(request)
         context["form"] = form
         return super().add_view(request, form_url, extra_context=context)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path("send-notification/", self.admin_site.admin_view(self.add_view), name="send-notification")
+        ]
+        return custom_urls + urls
